@@ -69,3 +69,18 @@ You can find all audit reports under the audits folder
 ## License
 
 All Rights Reserved © Aave Labs
+
+## RFID Utility
+
+A lightweight RFID copy/read/write CLI is available at `tools/rfid_tool.py`.
+
+Examples:
+
+```bash
+python tools/rfid_tool.py write --uid 04AABBCCDD --data "vault-tag"
+python tools/rfid_tool.py read --uid 04AABBCCDD
+python tools/rfid_tool.py copy --source 04AABBCCDD --target 0499887766
+```
+
+By default it uses a local mock backend (`.rfid_tags.json`).
+Use `--backend pcsc` to communicate with a PC/SC reader (`pyscard` required).
