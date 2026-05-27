@@ -26,16 +26,48 @@ jobs:
         with:
           version: stable
 
-      # Add any step generating a gas report to a temporary file named gasreport.ansi
-      # For example:
-      - name: Run tests
-        run: forge test --gas-report | tee gasreport.ansi # <- this file name should be unique in your repository!
+      - name: Run non-fork gas tests
+        run: |
+          forge test --gas-report \
+            --no-match-path "test/*Fork*.t.sol" \
+            --no-match-path "test/*RewardsClaim*.t.sol" \
+            --no-match-path "test/*Edge*.t.sol" \
+            --no-match-path "test/*Upgrade*.t.sol" \
+            | tee gasreport.ansi
         env:
           # make fuzzing semi-deterministic to avoid noisy gas cost estimation
           # due to non-deterministic fuzzing, but keep it not always deterministic
+          FOUNDRY_FUZZ_SEED: 0x${{ github.event.pull_request.base.sha || github.sha }}
+
+      - name: Run fork gas tests
+        if: ${{ secrets.POLYGON_RPC_URL != '' && secrets.AVALANCHE_RPC_URL != '' }}
+        run: |
+          forge test --gas-report \
+            --match-path "test/*Fork*.t.sol" \
+            --match-path "test/*RewardsClaim*.t.sol" \
+            --match-path "test/*Edge*.t.sol" \
+            --match-path "test/*Upgrade*.t.sol" \
+            | tee -a gasreport.ansi
+        env:
           POLYGON_RPC_URL: ${{ secrets.POLYGON_RPC_URL }}
           AVALANCHE_RPC_URL: ${{ secrets.AVALANCHE_RPC_URL }}
+          ETHEREUM_RPC_URL: ${{ secrets.ETHEREUM_RPC_URL }}
           FOUNDRY_FUZZ_SEED: 0x${{ github.event.pull_request.base.sha || github.sha }}
+
+      - name: Report skipped fork gas tests
+        if: ${{ secrets.POLYGON_RPC_URL == '' || secrets.AVALANCHE_RPC_URL == '' }}
+        run: |
+          echo "::warning title=Fork gas tests skipped::Missing POLYGON_RPC_URL or AVALANCHE_RPC_URL. Non-fork gas report was generated."
+          {
+            echo "# Fork gas tests skipped"
+            echo
+            echo "Non-fork Foundry gas tests completed, but fork-dependent tests were skipped because one or more RPC secrets are missing."
+            echo
+            echo "Required repository secrets:"
+            echo "- POLYGON_RPC_URL"
+            echo "- AVALANCHE_RPC_URL"
+            echo "- ETHEREUM_RPC_URL, if tests require Ethereum forks"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Compare gas reports
         uses: Rubilmax/foundry-gas-diff@v3.21
