@@ -65,6 +65,10 @@ You can find all audit reports under the audits folder
 - [03-03-2023 PeckShield](./audits/03-03-2023_Peckshield_Wrapped_AToken_Vault.pdf)
 - [18-06-2023 Certora](./certora/report/Aave-Vault-Formal-Verification.pdf)
 
+## Aura Core portal
+
+If you are integrating these contracts into the Aura Core portal, see [touch hotlink guidance](./docs/portal-hotlink-guidance.md) for fixing tap support on mobile devices.
+
 
 ## License
 
