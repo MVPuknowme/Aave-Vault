@@ -39,14 +39,7 @@ contract ImmutableATokenVault is ATokenVault {
         string memory shareSymbol,
         uint256 initialLockDeposit
     ) ATokenVault(underlying, referralCode, poolAddressesProvider) {
-        _initialize(
-            underlying,
-            owner,
-            initialFee,
-            shareName,
-            shareSymbol,
-            initialLockDeposit
-        );
+        _initialize(underlying, owner, initialFee, shareName, shareSymbol, initialLockDeposit);
     }
 
     /**
@@ -76,5 +69,5 @@ contract ImmutableATokenVault is ATokenVault {
      * This turns the `_disableInitializers` call in ATokenVault's constructor ineffective,
      * allowing initialization at the ImmutableATokenVault's constructor.
      */
-    function _disableInitializers() internal virtual override { }
+    function _disableInitializers() internal virtual override {}
 }

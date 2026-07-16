@@ -218,7 +218,7 @@ contract ATokenVaultForkTest is ATokenVaultForkBaseTest {
             SHARE_SYMBOL,
             initialLockDeposit
         );
-        
+
         deal(address(dai), address(this), initialLockDeposit);
         address proxyAddr = computeCreateAddress(address(this), vm.getNonce(address(this)) + 1);
 

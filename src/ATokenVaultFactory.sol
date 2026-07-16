@@ -23,11 +23,7 @@ library ATokenVaultImplDeploymentLib {
         uint16 referralCode,
         IPoolAddressesProvider poolAddressesProvider
     ) external returns (address vault) {
-        return address(new ATokenVault(
-            underlying,
-            referralCode,
-            poolAddressesProvider
-        ));
+        return address(new ATokenVault(underlying, referralCode, poolAddressesProvider));
     }
 }
 
@@ -115,11 +111,7 @@ contract ATokenVaultFactory {
         require(bytes(params.shareName).length > 0, "EMPTY_SHARE_NAME");
         require(bytes(params.shareSymbol).length > 0, "EMPTY_SHARE_SYMBOL");
 
-        IERC20(params.underlying).safeTransferFrom(
-            msg.sender,
-            address(this),
-            params.initialLockDeposit
-        );
+        IERC20(params.underlying).safeTransferFrom(msg.sender, address(this), params.initialLockDeposit);
 
         address implementation = ATokenVaultImplDeploymentLib.deployVaultImpl(
             params.underlying,
@@ -127,11 +119,7 @@ contract ATokenVaultFactory {
             params.poolAddressesProvider
         );
 
-        vault = address(new TransparentUpgradeableProxy(
-            implementation,
-            RENOUNCED_PROXY_ADMIN,
-            ""
-        ));
+        vault = address(new TransparentUpgradeableProxy(implementation, RENOUNCED_PROXY_ADMIN, ""));
 
         IERC20(params.underlying).safeApprove(vault, params.initialLockDeposit);
 
@@ -143,12 +131,6 @@ contract ATokenVaultFactory {
             params.initialLockDeposit
         );
 
-        emit VaultDeployed(
-            vault,
-            implementation,
-            params.underlying,
-            msg.sender,
-            params
-        );
+        emit VaultDeployed(vault, implementation, params.underlying, msg.sender, params);
     }
 }

@@ -9,6 +9,8 @@ An ERC-4626 vault which allows users to deposit/withdraw ERC-20 tokens supported
 
 ## Instructions
 
+To install Foundry tools locally, run `npm run forge:install` (or invoke `scripts/install-foundry.sh` directly). This installs `forge` into the `.foundry` directory within the repo.
+
 To compile/build the project, run `forge build`.
 
 To run the test suite, run `forge test`.

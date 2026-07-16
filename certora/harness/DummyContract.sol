@@ -1,5 +1,3 @@
-
-
 contract DummyContract {
     function havoc_all_dummy() external {
         havoc_all_dummy_internal();

@@ -10,7 +10,6 @@ import {IERC20} from "@openzeppelin/interfaces/IERC20.sol";
  * @notice Mock for USDT that has non-standard behavior (in contrast to ERC-20) for transfer and approval functions
  */
 contract MockUSDT {
-
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
     uint256 private _totalSupply;
@@ -38,18 +37,13 @@ contract MockUSDT {
     /**
      * @dev Does not return boolean in purpose. As it does not follow the ERC-20 standard properly.
      */
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) public virtual {
+    function transferFrom(address from, address to, uint256 amount) public virtual {
         address spender = msg.sender;
         _spendAllowance(from, spender, amount);
         _transfer(from, to, amount);
     }
 
     //////////////////////////// MOCK FUNCTIONS ////////////////////////////
-
 
     function mint(address to, uint256 value) public {
         _mint(to, value);
@@ -85,11 +79,7 @@ contract MockUSDT {
         return _allowances[owner][spender];
     }
 
-    function _transfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal virtual {
+    function _transfer(address from, address to, uint256 amount) internal virtual {
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
 
@@ -130,11 +120,7 @@ contract MockUSDT {
         emit IERC20.Transfer(account, address(0), amount);
     }
 
-    function _approve(
-        address owner,
-        address spender,
-        uint256 amount
-    ) internal virtual {
+    function _approve(address owner, address spender, uint256 amount) internal virtual {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
 
@@ -142,11 +128,7 @@ contract MockUSDT {
         emit IERC20.Approval(owner, spender, amount);
     }
 
-    function _spendAllowance(
-        address owner,
-        address spender,
-        uint256 amount
-    ) internal virtual {
+    function _spendAllowance(address owner, address spender, uint256 amount) internal virtual {
         uint256 currentAllowance = allowance(owner, spender);
         if (currentAllowance != type(uint256).max) {
             require(currentAllowance >= amount, "ERC20: insufficient allowance");

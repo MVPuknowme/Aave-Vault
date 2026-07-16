@@ -10,3 +10,4 @@ lcov.info
 .certora_internal/
 .certora_recent_jobs.json
 .idea
+.foundry/

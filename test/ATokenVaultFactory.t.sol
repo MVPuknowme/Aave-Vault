@@ -203,7 +203,12 @@ contract ATokenVaultFactoryTest is Test {
         // Find the VaultDeployed event (should be the last one)
         bool eventFound = false;
         for (uint i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == keccak256("VaultDeployed(address,address,address,address,(address,uint16,address,address,uint256,string,string,uint256))")) {
+            if (
+                logs[i].topics[0] ==
+                keccak256(
+                    "VaultDeployed(address,address,address,address,(address,uint16,address,address,uint256,string,string,uint256))"
+                )
+            ) {
                 eventFound = true;
 
                 // Decode the event data
@@ -519,7 +524,7 @@ contract ATokenVaultFactoryTest is Test {
         proxyAdmin = address(new ProxyAdmin_v4_7());
 
         ProxyAdmin_v4_7(proxyAdmin).renounceOwnership();
-            
+
         ATokenVaultFactory newFactory = new ATokenVaultFactory(proxyAdmin);
 
         uint256 initialDeposit = 1000 * 1e18;
@@ -748,11 +753,7 @@ contract ATokenVaultFactoryTest is Test {
                             FUZZ TESTS
     //////////////////////////////////////////////////////////////*/
 
-    function testFuzzDeployVaultWithValidParams(
-        uint16 referralCode,
-        uint256 initialFee,
-        uint256 initialDeposit
-    ) public {
+    function testFuzzDeployVaultWithValidParams(uint16 referralCode, uint256 initialFee, uint256 initialDeposit) public {
         initialDeposit = _boundInitialDeposit(initialDeposit);
         initialFee = _boundInitialFee(initialFee);
 
@@ -782,10 +783,7 @@ contract ATokenVaultFactoryTest is Test {
         assertEq(vaultContract.getFee(), initialFee);
     }
 
-    function testFuzzDeployVaultEdgeCases(
-        uint16 referralCode,
-        uint256 initialFee
-    ) public {
+    function testFuzzDeployVaultEdgeCases(uint16 referralCode, uint256 initialFee) public {
         uint256 minDeposit = 1;
         initialFee = _boundInitialFee(initialFee);
 
@@ -815,10 +813,7 @@ contract ATokenVaultFactoryTest is Test {
         assertEq(vaultContract.getFee(), initialFee);
     }
 
-    function testFuzzDeployVaultBoundaryFees(
-        uint16 referralCode,
-        uint256 initialDeposit
-    ) public {
+    function testFuzzDeployVaultBoundaryFees(uint16 referralCode, uint256 initialDeposit) public {
         initialDeposit = _boundInitialDeposit(initialDeposit);
 
         deal(address(underlying), ALICE, initialDeposit);

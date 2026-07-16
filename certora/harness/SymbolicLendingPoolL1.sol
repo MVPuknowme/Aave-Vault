@@ -1,7 +1,7 @@
 pragma solidity ^0.8.10;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../../lib/aave-v3-core/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
+import {IERC20} from "../../lib/aave-v3-core/contracts/dependencies/openzeppelin/contracts/IERC20.sol";
 import {IAToken} from "../../lib/aave-v3-core/contracts/interfaces/IAToken.sol";
 
 contract SymbolicLendingPoolL1 {
@@ -20,19 +20,10 @@ contract SymbolicLendingPoolL1 {
      * @param onBehalfOf The recipient of the minted Atokens
      * @param referralCode A unique code (unused)
      **/
-    function deposit(
-        address asset,
-        uint256 amount,
-        address onBehalfOf,
-        uint16 referralCode
-    ) external {
-        IERC20(asset).transferFrom(
-            msg.sender,
-            underlyingAssetToAToken_L1[asset],
-            amount
-        );
+    function deposit(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external {
+        IERC20(asset).transferFrom(msg.sender, underlyingAssetToAToken_L1[asset], amount);
         IAToken(underlyingAssetToAToken_L1[asset]).mint(
-            msg.sender,  //TODO: review added argument
+            msg.sender, //TODO: review added argument
             onBehalfOf,
             amount,
             liquidityIndex[asset]
@@ -46,17 +37,8 @@ contract SymbolicLendingPoolL1 {
      * @param to The recipient of the burned Atokens
      * @return The `amount` of tokens withdrawn
      **/
-    function withdraw(
-        address asset,
-        uint256 amount,
-        address to
-    ) external returns (uint256) {
-        IAToken(underlyingAssetToAToken_L1[asset]).burn(
-            msg.sender,
-            to,
-            amount,
-            liquidityIndex[asset]
-        );
+    function withdraw(address asset, uint256 amount, address to) external returns (uint256) {
+        IAToken(underlyingAssetToAToken_L1[asset]).burn(msg.sender, to, amount, liquidityIndex[asset]);
         return amount;
     }
 
@@ -65,26 +47,20 @@ contract SymbolicLendingPoolL1 {
      * @param asset The underlying asset to which the Atoken is connected
      * @return liquidityIndex the `liquidityIndex` of the asset
      **/
-    function getReserveNormalizedIncome(address asset)
-        external
-        view
-        virtual
-        returns (uint256)
-    {
+    function getReserveNormalizedIncome(address asset) external view virtual returns (uint256) {
         return liquidityIndex[asset];
     }
 
-
     // Original code from AAVE LendingPool:
-    // The version we use above assumes timestamp == uint40(block.timestamp) 
+    // The version we use above assumes timestamp == uint40(block.timestamp)
     // or alternatively, a very small value for LiquidityRate.
     /*
-    * @dev Returns the ongoing normalized income for the reserve
-    * A value of 1e27 means there is no income. As time passes, the income is accrued
-    * A value of 2*1e27 means for each unit of asset one unit of income has been accrued
-    * @param reserve The reserve object
-    * @return the normalized income. expressed in ray
-    */
+     * @dev Returns the ongoing normalized income for the reserve
+     * A value of 1e27 means there is no income. As time passes, the income is accrued
+     * A value of 2*1e27 means for each unit of asset one unit of income has been accrued
+     * @param reserve The reserve object
+     * @return the normalized income. expressed in ray
+     */
     /* 
     function getNormalizedIncome(DataTypes.ReserveData storage reserve)
     internal

@@ -40,7 +40,7 @@ contract ATokenVaultRevenueSplitterOwner is Ownable {
      * @dev The aToken Vault to own, whose revenue is split.
      */
     IATokenVault public immutable VAULT;
-    
+
     /**
      * @dev A struct to represent a recipient and its share of the revenue in basis points.
      * @param addr The address of the recipient.
@@ -137,8 +137,9 @@ contract ATokenVaultRevenueSplitterOwner is Ownable {
                  * than the intended total amount to split, leaving a few more units of the asset undistributed.
                  * These units (also known as 'dust') may be distributed in the next `splitRevenue` call.
                  */
-                uint256 amountForRecipient = accumulatedAssetBalance * recipients[j].shareInBps / TOTAL_SHARE_IN_BPS
-                    - _amountAlreadyTransferred[assets[i]][recipients[j].addr];
+                uint256 amountForRecipient = (accumulatedAssetBalance * recipients[j].shareInBps) /
+                    TOTAL_SHARE_IN_BPS -
+                    _amountAlreadyTransferred[assets[i]][recipients[j].addr];
                 if (amountForRecipient > 0) {
                     _amountAlreadyTransferred[assets[i]][recipients[j].addr] += amountForRecipient;
                     IERC20(assets[i]).safeTransfer(recipients[j].addr, amountForRecipient);
@@ -156,7 +157,7 @@ contract ATokenVaultRevenueSplitterOwner is Ownable {
      * @dev Rescues assets that may have accidentally been transferred to the vault.
      * @dev Only callable by the owner of this contract.
      * @dev The asset to rescue cannot be the vault's aToken.
-     * @dev Fees cannot be "rescued" as they are accrued in the vault's aToken. Rewards cannot be "rescued" as they are 
+     * @dev Fees cannot be "rescued" as they are accrued in the vault's aToken. Rewards cannot be "rescued" as they are
      * not held by the vault contract. Thus, already accrued fees and rewards cannot be taken from split recipients.
      * @param asset The asset to rescue from the vault.
      * @param to The address to send the rescued assets to.

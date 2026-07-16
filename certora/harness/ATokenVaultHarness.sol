@@ -11,8 +11,6 @@ import {IERC20Upgradeable} from "@openzeppelin-upgradeable/interfaces/IERC20Upgr
 import {MathUpgradeable} from "@openzeppelin-upgradeable/utils/math/MathUpgradeable.sol";
 import {WadRayMath} from "@aave-v3-core/protocol/libraries/math/WadRayMath.sol";
 
-
-
 /**
  * @title ATokenVault
  * @author Aave Protocol
@@ -22,19 +20,22 @@ contract ATokenVaultHarness is ATokenVault {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using MathUpgradeable for uint256;
     DummyContract DUMMY;
-    
-    constructor(address underlying, uint16 referralCode, IPoolAddressesProvider poolAddressesProvider) ATokenVault(underlying, referralCode, poolAddressesProvider) {
-    }
-    
+
+    constructor(
+        address underlying,
+        uint16 referralCode,
+        IPoolAddressesProvider poolAddressesProvider
+    ) ATokenVault(underlying, referralCode, poolAddressesProvider) {}
+
     function havoc_all() public {
         DUMMY.havoc_all_dummy();
     }
-    
+
     function accrueYield() external {
         _accrueYield();
     }
-    
-    function getAccumulatedFees() external returns(uint128) {
+
+    function getAccumulatedFees() external returns (uint128) {
         return _s.accumulatedFees;
     }
 
@@ -42,37 +43,52 @@ contract ATokenVaultHarness is ATokenVault {
         return _maxAssetsWithdrawableFromAave();
     }
 
-    function maxAssetsWithdrawableFromAaveWrapper() external returns (uint256){
+    function maxAssetsWithdrawableFromAaveWrapper() external returns (uint256) {
         return _maxAssetsWithdrawableFromAave();
     }
 
-    function mulDiv__(uint256 x, uint256 y, uint256 deno, MathUpgradeable.Rounding rounding) external returns(uint256 result) {
-      result = x.mulDiv(y,deno,rounding);
+    function mulDiv__(uint256 x, uint256 y, uint256 deno, MathUpgradeable.Rounding rounding) external returns (uint256 result) {
+        result = x.mulDiv(y, deno, rounding);
     }
 
     function rayMul__(uint256 a, uint256 b) external returns (uint256) {
-        return WadRayMath.rayMul(a,b);
+        return WadRayMath.rayMul(a, b);
     }
 
     function rayDiv__(uint256 a, uint256 b) external returns (uint256) {
-        return WadRayMath.rayDiv(a,b);
-    }
-    function handleDeposit_wrapper(uint256 assets, address receiver, address depositor, bool asAToken)
-        external returns (uint256) {
-        return _handleDeposit(assets,receiver,depositor,asAToken);
-    }
-    function handleMint_wrapper(uint256 shares, address receiver, address depositor, bool asAToken)
-        external returns (uint256) {
-        return _handleMint(shares,receiver,depositor,asAToken);
-    }
-    function handleWithdraw_wrapper(uint256 assets, address receiver, address owner, address allowanceTarget, bool asAToken)
-        external returns (uint256) {
-        return _handleWithdraw(assets,receiver,owner,allowanceTarget,asAToken);
-    }
-    function handleRedeem_wrapper(uint256 shares, address receiver, address owner, address allowanceTarget, bool asAToken)
-        external returns (uint256) {
-        return _handleRedeem(shares,receiver,owner,allowanceTarget,asAToken);
+        return WadRayMath.rayDiv(a, b);
     }
 
-    
+    function handleDeposit_wrapper(
+        uint256 assets,
+        address receiver,
+        address depositor,
+        bool asAToken
+    ) external returns (uint256) {
+        return _handleDeposit(assets, receiver, depositor, asAToken);
+    }
+
+    function handleMint_wrapper(uint256 shares, address receiver, address depositor, bool asAToken) external returns (uint256) {
+        return _handleMint(shares, receiver, depositor, asAToken);
+    }
+
+    function handleWithdraw_wrapper(
+        uint256 assets,
+        address receiver,
+        address owner,
+        address allowanceTarget,
+        bool asAToken
+    ) external returns (uint256) {
+        return _handleWithdraw(assets, receiver, owner, allowanceTarget, asAToken);
+    }
+
+    function handleRedeem_wrapper(
+        uint256 shares,
+        address receiver,
+        address owner,
+        address allowanceTarget,
+        bool asAToken
+    ) external returns (uint256) {
+        return _handleRedeem(shares, receiver, owner, allowanceTarget, asAToken);
+    }
 }

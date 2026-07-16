@@ -40,9 +40,9 @@ contract ATokenVaultForkFuzzingTest is ATokenVaultForkBaseTest {
         vm.assume(amount > vault.convertToAssets(1));
 
         _depositFromUser(ALICE, amount);
-        
+
         // Explicitly redeem the entire balance.
-        _redeemFromUser(ALICE, vault.balanceOf(ALICE)); 
+        _redeemFromUser(ALICE, vault.balanceOf(ALICE));
         assertGt(dai.balanceOf(ALICE), amount - 2);
         assertLt(dai.balanceOf(ALICE), amount + 2);
     }

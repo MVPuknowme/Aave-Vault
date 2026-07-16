@@ -51,7 +51,14 @@ contract ImmutableATokenVaultForkTest is ImmutableATokenVaultForkBaseTest {
     function testConstructorReverts_BadPoolAddressProvider() public {
         vm.expectRevert();
         vault = new ImmutableATokenVault(
-            address(dai), referralCode, IPoolAddressesProvider(address(0)), OWNER, fee, SHARE_NAME, SHARE_SYMBOL, 1
+            address(dai),
+            referralCode,
+            IPoolAddressesProvider(address(0)),
+            OWNER,
+            fee,
+            SHARE_NAME,
+            SHARE_SYMBOL,
+            1
         );
     }
 

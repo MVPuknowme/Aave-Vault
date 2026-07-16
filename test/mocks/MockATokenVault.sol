@@ -6,7 +6,6 @@ import {Ownable} from "@openzeppelin/access/Ownable.sol";
 pragma solidity ^0.8.10;
 
 contract MockATokenVault is Ownable {
-
     address internal _aTokenMock;
 
     uint256 internal _fees;
@@ -24,11 +23,11 @@ contract MockATokenVault is Ownable {
     receive() external payable {}
 
     // Mock functions
-  
+
     function mockFees(uint256 amount) external {
         _fees = amount;
         // Ensure the vault has enough aTokens to transfer fees later
-        MockDAI(_aTokenMock).mint(address(this), amount); 
+        MockDAI(_aTokenMock).mint(address(this), amount);
     }
 
     function mockRewards(address[] calldata mockAssets, uint256[] calldata amounts) external {
