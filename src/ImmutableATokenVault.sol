@@ -7,6 +7,7 @@ import {SafeERC20Upgradeable} from "@openzeppelin-upgradeable/token/ERC20/utils/
 import {IERC20Upgradeable} from "@openzeppelin-upgradeable/interfaces/IERC20Upgradeable.sol";
 import {IPoolAddressesProvider} from "@aave-v3-core/interfaces/IPoolAddressesProvider.sol";
 import {ATokenVault} from "./ATokenVault.sol";
+import {VaultValidators} from "./libraries/VaultValidators.sol";
 
 /**
  * @title ImmutableATokenVault
@@ -60,8 +61,7 @@ contract ImmutableATokenVault is ATokenVault {
         string memory shareSymbol,
         uint256 initialLockDeposit
     ) internal virtual initializer {
-        require(owner != address(0), "ZERO_ADDRESS_NOT_VALID");
-        require(initialLockDeposit != 0, "ZERO_INITIAL_LOCK_DEPOSIT");
+        VaultValidators.validateInitParams(owner, initialLockDeposit, shareName, shareSymbol);
         _transferOwnership(owner);
         __ERC4626_init(IERC20Upgradeable(underlying));
         __ERC20_init(shareName, shareSymbol);
