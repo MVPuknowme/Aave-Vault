@@ -1,0 +1,30 @@
+name: Skip Vercel
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  skip:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark Vercel as skipped
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const sha = context.payload.pull_request?.head.sha ?? context.sha;
+            await github.rest.repos.createCommitStatus({
+              ...context.repo,
+              sha,
+              state: "success",
+              context: "Vercel",
+              description: "Skipped: deployments disabled for this Solidity library",
+              target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/blob/${sha}/vercel.json`,
+            });

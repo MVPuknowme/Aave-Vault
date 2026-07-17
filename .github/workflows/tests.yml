@@ -2,9 +2,17 @@ name: Tests
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   tests:
     runs-on: ubuntu-latest
+    env:
+      POLYGON_RPC_URL: ${{ secrets.POLYGON_RPC_URL }}
+      AVALANCHE_RPC_URL: ${{ secrets.AVALANCHE_RPC_URL }}
+      ETHEREUM_RPC_URL: ${{ secrets.ETHEREUM_RPC_URL }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -19,8 +27,19 @@ jobs:
       - name: Check contract sizes
         run: forge build --sizes
 
-      - name: Run tests
-        env: 
-          POLYGON_RPC_URL: ${{ secrets.POLYGON_RPC_URL }}
-          AVALANCHE_RPC_URL: ${{ secrets.AVALANCHE_RPC_URL }}
-        run: forge test -vvv
+      - name: Run non-fork tests
+        run: forge test -vvv --no-match-contract '(Fork|RewardsClaim|Edge|Upgrade)'
+
+      - name: Run fork tests
+        if: env.POLYGON_RPC_URL != '' && env.AVALANCHE_RPC_URL != ''
+        run: forge test -vvv --match-contract '(Fork|RewardsClaim|Edge|Upgrade)'
+
+      - name: Report skipped fork tests
+        if: env.POLYGON_RPC_URL == '' || env.AVALANCHE_RPC_URL == ''
+        run: |
+          echo "::warning title=Fork tests skipped::Missing POLYGON_RPC_URL or AVALANCHE_RPC_URL. Non-fork tests completed successfully."
+          {
+            echo "# Fork tests skipped"
+            echo
+            echo "Non-fork Foundry tests completed successfully. Fork-dependent tests require both POLYGON_RPC_URL and AVALANCHE_RPC_URL."
+          } >> "$GITHUB_STEP_SUMMARY"
