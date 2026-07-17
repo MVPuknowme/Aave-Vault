@@ -5,17 +5,20 @@ on:
     branches:
       - main
   pull_request:
-    # Optionally configure to run only for changes in specific files. For example:
-    # paths:
-    # - src/**
-    # - test/**
-    # - foundry.toml
-    # - remappings.txt
-    # - .github/workflows/foundry-gas-diff.yml
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   compare_gas_reports:
     runs-on: ubuntu-latest
+    env:
+      POLYGON_RPC_URL: ${{ secrets.POLYGON_RPC_URL }}
+      AVALANCHE_RPC_URL: ${{ secrets.AVALANCHE_RPC_URL }}
+      ETHEREUM_RPC_URL: ${{ secrets.ETHEREUM_RPC_URL }}
+      FOUNDRY_FUZZ_SEED: 0x${{ github.event.pull_request.base.sha || github.sha }}
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,33 +32,18 @@ jobs:
       - name: Run non-fork gas tests
         run: |
           forge test --gas-report \
-            --no-match-path "test/*Fork*.t.sol" \
-            --no-match-path "test/*RewardsClaim*.t.sol" \
-            --no-match-path "test/*Edge*.t.sol" \
-            --no-match-path "test/*Upgrade*.t.sol" \
+            --no-match-contract '(Fork|RewardsClaim|Edge|Upgrade)' \
             | tee gasreport.ansi
-        env:
-          # make fuzzing semi-deterministic to avoid noisy gas cost estimation
-          # due to non-deterministic fuzzing, but keep it not always deterministic
-          FOUNDRY_FUZZ_SEED: 0x${{ github.event.pull_request.base.sha || github.sha }}
 
       - name: Run fork gas tests
-        if: ${{ secrets.POLYGON_RPC_URL != '' && secrets.AVALANCHE_RPC_URL != '' }}
+        if: env.POLYGON_RPC_URL != '' && env.AVALANCHE_RPC_URL != ''
         run: |
           forge test --gas-report \
-            --match-path "test/*Fork*.t.sol" \
-            --match-path "test/*RewardsClaim*.t.sol" \
-            --match-path "test/*Edge*.t.sol" \
-            --match-path "test/*Upgrade*.t.sol" \
+            --match-contract '(Fork|RewardsClaim|Edge|Upgrade)' \
             | tee -a gasreport.ansi
-        env:
-          POLYGON_RPC_URL: ${{ secrets.POLYGON_RPC_URL }}
-          AVALANCHE_RPC_URL: ${{ secrets.AVALANCHE_RPC_URL }}
-          ETHEREUM_RPC_URL: ${{ secrets.ETHEREUM_RPC_URL }}
-          FOUNDRY_FUZZ_SEED: 0x${{ github.event.pull_request.base.sha || github.sha }}
 
       - name: Report skipped fork gas tests
-        if: ${{ secrets.POLYGON_RPC_URL == '' || secrets.AVALANCHE_RPC_URL == '' }}
+        if: env.POLYGON_RPC_URL == '' || env.AVALANCHE_RPC_URL == ''
         run: |
           echo "::warning title=Fork gas tests skipped::Missing POLYGON_RPC_URL or AVALANCHE_RPC_URL. Non-fork gas report was generated."
           {
@@ -72,15 +60,14 @@ jobs:
       - name: Compare gas reports
         uses: Rubilmax/foundry-gas-diff@v3.21
         with:
-          sortCriteria: avg,max # optionnally sort diff rows by criteria
-          sortOrders: desc,asc # and directions
-          ignore: test/**/* # optionally filter out gas reports from specific paths
+          sortCriteria: avg,max
+          sortOrders: desc,asc
+          ignore: test/**/*
         id: gas_diff
 
       - name: Add gas diff to sticky comment
         if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          # delete the comment in case changes no longer impact gas costs
           delete: ${{ !steps.gas_diff.outputs.markdown }}
           message: ${{ steps.gas_diff.outputs.markdown }}
