@@ -23,6 +23,8 @@ STORE_PATH = Path('.rfid_tags.json')
 
 
 class RFIDBackend:
+    requires_card_swap = False
+
     def read(self, uid: str) -> bytes:
         raise NotImplementedError
 
@@ -55,46 +57,68 @@ class MockBackend(RFIDBackend):
 
 
 class PcscBackend(RFIDBackend):
-    def __init__(self):
-        try:
-            from smartcard.System import readers
-            from smartcard.util import toHexString
-        except ImportError as exc:  # pragma: no cover
-            raise RuntimeError('pyscard is required for --backend pcsc') from exc
+    requires_card_swap = True
 
-        self._readers = readers
-        self._to_hex = toHexString
+    UID_APDU = (0xFF, 0xCA, 0x00, 0x00, 0x00)
+    READ_APDU = (0xFF, 0xB0, 0x00, 0x04, 0x10)
+    WRITE_APDU_PREFIX = (0xFF, 0xD6, 0x00, 0x04, 0x10)
 
-    def _connect(self):
+    def __init__(self, readers_provider=None):
+        if readers_provider is None:
+            try:
+                from smartcard.System import readers
+            except ImportError as exc:  # pragma: no cover
+                raise RuntimeError('pyscard is required for --backend pcsc') from exc
+            readers_provider = readers
+
+        self._readers = readers_provider
+
+    @staticmethod
+    def _transmit(connection, apdu, operation: str) -> bytes:
+        response, sw1, sw2 = connection.transmit(list(apdu))
+        if (sw1, sw2) != (0x90, 0x00):
+            raise RuntimeError(f'{operation} failed: SW={sw1:02X}{sw2:02X}')
+        return bytes(response)
+
+    def _connect(self, expected_uid: str):
+        expected_uid = normalize_uid(expected_uid)
         reader_list = self._readers()
         if not reader_list:
             raise RuntimeError('no PC/SC reader found')
+
         connection = reader_list[0].createConnection()
         connection.connect()
+        uid_bytes = self._transmit(connection, self.UID_APDU, 'card UID read')
+        actual_uid = normalize_uid(binascii.hexlify(uid_bytes).decode())
+        if actual_uid != expected_uid:
+            raise RuntimeError(
+                f'card UID mismatch: expected {expected_uid}, found {actual_uid}'
+            )
         return connection
 
     def read(self, uid: str) -> bytes:
-        connection = self._connect()
+        connection = self._connect(uid)
         # APDU for MIFARE Classic block read (block 4). Authentication is reader/card specific.
-        apdu = [0xFF, 0xB0, 0x00, 0x04, 0x10]
-        response, sw1, sw2 = connection.transmit(apdu)
-        if (sw1, sw2) != (0x90, 0x00):
-            raise RuntimeError(f'card read failed: SW={sw1:02X}{sw2:02X}')
-        return bytes(response)
+        return self._transmit(connection, self.READ_APDU, 'card read')
 
     def write(self, uid: str, payload: bytes) -> None:
         if len(payload) > 16:
             raise ValueError('pcsc backend currently writes max 16 bytes (1 block)')
         payload = payload.ljust(16, b'\x00')
-        connection = self._connect()
-        apdu = [0xFF, 0xD6, 0x00, 0x04, 0x10] + list(payload)
-        _, sw1, sw2 = connection.transmit(apdu)
-        if (sw1, sw2) != (0x90, 0x00):
-            raise RuntimeError(f'card write failed: SW={sw1:02X}{sw2:02X}')
+        connection = self._connect(uid)
+        apdu = self.WRITE_APDU_PREFIX + tuple(payload)
+        self._transmit(connection, apdu, 'card write')
 
 
 def normalize_uid(uid: str) -> str:
-    return uid.replace(':', '').replace('-', '').upper()
+    normalized = uid.replace(':', '').replace('-', '').replace(' ', '').upper()
+    if not normalized:
+        raise ValueError('UID cannot be empty')
+    if len(normalized) % 2:
+        raise ValueError('UID must contain an even number of hexadecimal characters')
+    if any(character not in '0123456789ABCDEF' for character in normalized):
+        raise ValueError('UID must contain only hexadecimal characters')
+    return normalized
 
 
 def parse_data(raw: str, encoding: str) -> bytes:
@@ -151,7 +175,12 @@ def main() -> int:
     if args.command == 'copy':
         source = normalize_uid(args.source)
         target = normalize_uid(args.target)
+        if source == target:
+            raise ValueError('source and target UIDs must differ')
+
         payload = backend.read(source)
+        if backend.requires_card_swap:
+            input(f'Present target tag {target} and press Enter to continue...')
         backend.write(target, payload)
         print(f'copied {len(payload)} bytes from {source} to {target}')
         return 0
