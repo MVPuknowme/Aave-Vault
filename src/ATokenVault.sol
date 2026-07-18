@@ -18,6 +18,7 @@ import {WadRayMath} from "@aave-v3-core/protocol/libraries/math/WadRayMath.sol";
 import {IRewardsController} from "@aave-v3-periphery/rewards/interfaces/IRewardsController.sol";
 import {IATokenVault} from "./interfaces/IATokenVault.sol";
 import {MetaTxHelpers} from "./libraries/MetaTxHelpers.sol";
+import {VaultValidators} from "./libraries/VaultValidators.sol";
 import "./libraries/Constants.sol";
 import {ATokenVaultStorage} from "./ATokenVaultStorage.sol";
 
@@ -81,8 +82,7 @@ contract ATokenVault is ERC4626Upgradeable, OwnableUpgradeable, EIP712Upgradeabl
         string memory shareSymbol,
         uint256 initialLockDeposit
     ) external initializer {
-        require(owner != address(0), "ZERO_ADDRESS_NOT_VALID");
-        require(initialLockDeposit != 0, "ZERO_INITIAL_LOCK_DEPOSIT");
+        VaultValidators.validateInitParams(owner, initialLockDeposit, shareName, shareSymbol);
         _transferOwnership(owner);
         __ERC4626_init(UNDERLYING);
         __ERC20_init(shareName, shareSymbol);
