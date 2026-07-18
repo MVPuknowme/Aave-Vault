@@ -9,6 +9,7 @@ import {TransparentUpgradeableProxy} from "@openzeppelin/proxy/transparent/Trans
 import {ATokenVault} from "./ATokenVault.sol";
 import {SafeERC20} from "@openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import {ProxyAdmin} from "@openzeppelin/proxy/transparent/ProxyAdmin.sol";
+import {VaultValidators} from "./libraries/VaultValidators.sol";
 
 /**
  * @title ATokenVaultImplDeploymentLib
@@ -110,10 +111,12 @@ contract ATokenVaultFactory {
     function deployVault(VaultParams memory params) public returns (address vault) {
         require(params.underlying != address(0), "ZERO_ADDRESS_NOT_VALID");
         require(address(params.poolAddressesProvider) != address(0), "ZERO_ADDRESS_NOT_VALID");
-        require(params.owner != address(0), "ZERO_ADDRESS_NOT_VALID");
-        require(params.initialLockDeposit > 0, "ZERO_INITIAL_LOCK_DEPOSIT");
-        require(bytes(params.shareName).length > 0, "EMPTY_SHARE_NAME");
-        require(bytes(params.shareSymbol).length > 0, "EMPTY_SHARE_SYMBOL");
+        VaultValidators.validateInitParams(
+            params.owner,
+            params.initialLockDeposit,
+            params.shareName,
+            params.shareSymbol
+        );
 
         IERC20(params.underlying).safeTransferFrom(
             msg.sender,
